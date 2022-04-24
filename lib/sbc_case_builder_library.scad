@@ -2,7 +2,7 @@
     SBC Case Builder Library Copyright 2022 Edward A. Kisiel, hominoid @ www.forum.odroid.com
     
     Contributions:
-    hk_vu8m(brackets),u_bracket(),spacer() Copyright 2022 Tomek Szczęsny, mctom @ www.forum.odroid.com
+    hk_vu8m(brackets),u_bracket(),screw(),m1_hdmount() Copyright 2022 Tomek Szczęsny, mctom @ www.forum.odroid.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,13 +40,14 @@
     20220406 version 1.2.2 hk_wb2(), hk_vu7c(gpio_ext, tabs), hdmi_a(), header_f(pins, height), pcb_pad(pads), 
                            embelished boom_speaker(), changed boom_speaker_holder(style, tolerance), added boom_speaker_strap(),
                            adjusted access_port(), access_cover(), added @mctom's hk_vu8m(bracket), u_bracket(), spacer()
-    2022xxxx version 1.2.x Nightly Not Released
+    2022xxxx version 1.2.x removed spacer(); added screw(); modified hk_vu8m(); added m1_hdmount(); added hdd35_25holder(length)
     
     place(x,y,z,size_x,size_y,rotation,side)
     add(type,loc_x,loc_y,loc_z,size_x,size_y,size_z,rotation,face,side,case_z,data_1,data_2,data_3,data_4)
     sub(type,loc_x,loc_y,loc_z,size_x,size_y,size_z,rotation,face,side,case_z,data_1,data_2,data_3,data_4)
     
     art(scale_d1,type,size_z)
+    screw(screw[d, l, style])
     slab(size, radius)
     slab_r(size, radius)
     slot(hole,length,depth)
@@ -70,6 +71,7 @@
     hd_bottom_holes(hd,orientation,position,side,thick)
     hd25(height)
     hd35()
+    hdd35_25holder(length)
     hk_wb2()
     hc4_oled()
     h2_netcard()
@@ -77,6 +79,8 @@
     hk_uart()
     hk_vu7c(gpio_ext, tabs)
     hk_vu8m(bracket)
+    u_bracket()
+    m1_hdmount()
     hdmi_a()
     header_f(pins, height)
     pcb_pad(pads)
@@ -313,6 +317,31 @@ module art(scale_d1,size_z,type) {
 
 }
 
+// General purpose screw
+// screw(screw[d, l, style])
+// 	d - thread diameter
+// 	l - thread length
+// 	style - screw head style
+//
+// 	Styles:
+// 	0 - Mushroom head, 5mm diameter
+
+module screw(screw_type) {
+    d = screw_type[0];
+    l = screw_type[1];
+    style = screw_type[2];
+
+    // Head
+        if(style == 0) {
+            difference() {
+                translate([  0,  0, -0.3]) sphere(2.7);
+                translate([-10,-10,-10]) cube([20,20,10]);
+                translate([-10,-10,  2]) cube([20,20,10]);
+            }
+        }
+    // Thread
+        rotate([180,0,0]) cylinder(d=d, h=l);
+}
 
 /* slab module */
 module slab(size, radius) {
@@ -391,10 +420,10 @@ module standoff(stand_off){
     difference (){ 
         union () { 
             if(style == 0 && reverse == 0) {
-                rotate([0,0,30]) cylinder(d=radius,h=height,$fn=6);
+                rotate([0,0,30]) cylinder(d=radius*2/sqrt(3),h=height,$fn=6);
             }
             if(style == 0 && reverse == 1) {
-                translate([0,0,-height]) rotate([0,0,30]) cylinder(d=radius,h=height,$fn=6);
+                translate([0,0,-height]) rotate([0,0,30]) cylinder(d=radius*2/sqrt(3),h=height,$fn=6);
             }
             if(style == 1 && reverse == 0) {
                 cylinder(d=radius,h=height,$fn=90);
@@ -1133,6 +1162,94 @@ module hd35() {
 }
 
 
+/* 3.5" hdd to 2.5" hdd holder */
+module hdd35_25holder(length) {
+    wallthick = 3;
+    floorthick = 2;
+    hd35_x = length;                    // 145mm for 3.5" drive
+    hd35_y = 101.6;
+    hd35_z = 12;
+    hd25_x = 100;
+    hd25_y = 69.85;
+    hd25_z = 9.5;
+    hd25_xloc = 2;                     // or (hd35_x-hd25_x)/2
+    hd25_yloc = (hd35_y-hd25_y)/2;
+    hd25_zloc = 9.5;
+    adjust = .1;    
+    $fn=90;
+    difference() {
+        union() {
+            difference() {
+                translate([(hd35_x/2),(hd35_y/2),(hd35_z/2)])         
+                    cube_fillet_inside([hd35_x,hd35_y,hd35_z], 
+                        vertical=[3,3,3,3], top=[0,0,0,0], bottom=[0,0,0,0], $fn=90);      
+                translate([(hd35_x/2),(hd35_y/2),(hd35_z/2)+floorthick])           
+                    cube_fillet_inside([hd35_x-(wallthick*2),hd35_y-(wallthick*2),hd35_z], 
+                        vertical=[0,0,0,0], top=[0,0,0,0], bottom=[0,0,0,0], $fn=90);
+                   
+                // end trim
+                translate([-adjust,5,wallthick+2]) cube([wallthick+(adjust*2),hd35_y-10,10]);
+                translate([hd35_x-wallthick-adjust,5,wallthick+2]) cube([wallthick+(adjust*2),hd35_y-10,10]);
+                
+                // bottom vents
+                for ( r=[15:40:hd35_x-40]) {
+                    for (c=[25:4:75]) {
+                        translate ([r,c,-adjust]) cube([35,2,wallthick+(adjust*2)]);
+                    }
+                }       
+            }
+            // 2.5 hdd bottom support
+            translate([9.4+hd25_xloc,4.07+hd25_yloc,floorthick-adjust]) cylinder(d=8,h=4);
+            translate([86+hd25_xloc,4.07+hd25_yloc,floorthick-adjust]) cylinder(d=8,h=4);
+            translate([86+hd25_xloc,65.79+hd25_yloc,floorthick-adjust]) cylinder(d=8,h=4);
+            translate([9.4+hd25_xloc,65.79+hd25_yloc,floorthick-adjust]) cylinder(d=8,h=4);
+        
+        // side nut holder support    
+        translate([16,wallthick-adjust,7]) rotate([-90,0,0]) cylinder(d=10,h=3);
+        translate([76,wallthick-adjust,7]) rotate([-90,0,0])  cylinder(d=10,h=3);
+            if(length >= 120) {
+                translate([117.5,wallthick-adjust,7]) rotate([-90,0,0])  cylinder(d=10,h=3);
+                translate([117.5,hd35_y-wallthick-adjust,7]) rotate([90,0,0])  cylinder(d=10,h=3);
+            }
+        translate([76,hd35_y-wallthick-adjust,7]) rotate([90,0,0])  cylinder(d=10,h=3);
+        translate([16,hd35_y-wallthick-adjust,7]) rotate([90,0,0])  cylinder(d=10,h=3);
+        
+        // bottom-side support
+        translate([wallthick,wallthick,floorthick-2]) rotate([45,0,0]) cube([hd35_x-(wallthick*2),3,3]);
+        translate([wallthick,hd35_y-wallthick+adjust,floorthick-2]) rotate([45,0,0]) cube([hd35_x-(wallthick*2),3,3]);
+         
+        }
+        // bottom screw holes
+        translate([9.4+hd25_xloc,4.07+hd25_yloc,-adjust]) cylinder(d=3,h=(floorthick*3)+(adjust*2));
+        translate([86+hd25_xloc,4.07+hd25_yloc,-adjust]) cylinder(d=3,h=(floorthick*3)+(adjust*2));
+        translate([86+hd25_xloc,65.79+hd25_yloc,-adjust]) cylinder(d=3,h=(floorthick*3)+(adjust*2));
+        translate([9.4+hd25_xloc,65.79+hd25_yloc,-adjust]) cylinder(d=3,h=(floorthick*3)+(adjust*2));
+        
+         // countersink holes
+        translate([9.4+hd25_xloc,4.07+hd25_yloc,-adjust]) cylinder(d1=6.5, d2=3, h=3);
+        translate([86+hd25_xloc,4.07+hd25_yloc,-adjust]) cylinder(d1=6.5, d2=3, h=3);
+        translate([86+hd25_xloc,65.79+hd25_yloc,-adjust]) cylinder(d1=6.5, d2=3, h=3);
+        translate([9.4+hd25_xloc,65.79+hd25_yloc,-adjust]) cylinder(d1=6.5, d2=3, h=3);
+       
+        // side screw holes
+        translate([16,-adjust,7]) rotate([-90,0,0]) cylinder(d=3.6,h=7);
+        translate([76,-adjust,7]) rotate([-90,0,0])  cylinder(d=3.6,h=7);
+        translate([117.5,-adjust,7]) rotate([-90,0,0])  cylinder(d=3.6,h=7);
+        translate([117.5,hd35_y+adjust,7]) rotate([90,0,0])  cylinder(d=3.6,h=7);
+        translate([76,hd35_y+adjust,7]) rotate([90,0,0])  cylinder(d=3.6,h=7);
+        translate([16,hd35_y+adjust,7]) rotate([90,0,0])  cylinder(d=3.6,h=7);
+        
+        // side nut trap    
+        translate([16,wallthick-adjust,7]) rotate([-90,0,0]) cylinder(r=3.30,h=5,$fn=6);
+        translate([76,wallthick-adjust,7]) rotate([-90,0,0])  cylinder(r=3.30,h=5,$fn=6);
+        translate([117.5,wallthick-adjust,7]) rotate([-90,0,0])  cylinder(r=3.30,h=5,$fn=6);
+        translate([117.5,hd35_y-wallthick-adjust,7]) rotate([90,0,0])  cylinder(r=3.30,h=5,$fn=6);
+        translate([76,hd35_y-wallthick-adjust,7]) rotate([90,0,0])  cylinder(r=3.30,h=5,$fn=6);
+        translate([16,hd35_y-wallthick-adjust,7]) rotate([90,0,0])  cylinder(r=3.30,h=5,$fn=6);
+    }
+}
+
+
 /* odroid-hc4 oled */
 module hc4_oled() {
     
@@ -1319,7 +1436,6 @@ module hk_vu7c(gpio_ext, tabs) {
     translate([59,52.69,-1.59]) ic(9);
 }
 
-
 // hk vu8m lcd display
 module hk_vu8m(brackets) {
     $fn = 90;    
@@ -1336,7 +1452,7 @@ module hk_vu8m(brackets) {
     lcd_clearance = [0.15, 0.1, 0];
     pcb_size = [14,24,1.6];
     hole = 4.31;
-    standoffs = 6;
+    spacer_size = [5.5, 6, 2.5, 0, 0, 0, 1, 1, 0, 0, 0, 0];
 
     // "body"
     color([0.1,0.1,0.1])
@@ -1348,8 +1464,7 @@ module hk_vu8m(brackets) {
         translate([3.76 + lcd_space[0], 9               ,    -1]) cylinder(r=1.3, h=5);
         translate([3.76               , 9 + lcd_space[1],    -1]) cylinder(r=1.3, h=5);
         translate([3.76 + lcd_space[0], 9 + lcd_space[1],    -1]) cylinder(r=1.3, h=5);
-
-        // 8x holes in body
+    // 8x holes in body
         translate([  44.5,              4.5, -1]) cylinder(d=hole, h=5);
         translate([  51.5,              4.5, -1]) cylinder(d=hole, h=5);
         translate([ 183.5,              4.5, -1]) cylinder(d=hole, h=5);
@@ -1361,33 +1476,42 @@ module hk_vu8m(brackets) {
 
     }
     // 4x standoffs
-    translate([  44.5,              4.5, -standoffs]) spacer();
-    translate([ 183.5,              4.5, -standoffs]) spacer();
-    translate([  44.5, body_size[1]-4.5, -standoffs]) spacer();
-    translate([ 183.5, body_size[1]-4.5, -standoffs]) spacer();
+        color([0.6,0.6,0.6]) {
+            translate([  44.5,              4.5, 0]) standoff(spacer_size);
+            translate([ 183.5,              4.5, 0]) standoff(spacer_size);
+            translate([  44.5, body_size[1]-4.5, 0]) standoff(spacer_size);
+            translate([ 183.5, body_size[1]-4.5, 0]) standoff(spacer_size);
+        }
     // LCD panel
     color([0.6, 0.6, 0.65])
         translate([3.76, 9, body_size[2]-lcd_size[2]]+lcd_clearance)
             cube(lcd_size); 
+
     // Front glass
     // It's actually thinner and glued, but for the sake of simplicity...
     color([0.2, 0.2, 0.2], 0.9)
     translate([0.86, 1.38, body_size[2] + 0.01])
-    difference(){
-        slab(glass_size, rb);
+    slab(glass_size, rb);
 
-    }
     // PCB stub
     color([0.1,0.1,0.1])
         translate([20.5, 24.5, -3])
             cube(pcb_size);
+
     //Brackets
     if(brackets) {
-        translate([44.5 - 7.5,   body_size[1]/2 + m1_screw_spacing/2 - 7.5, - standoffs - 2]) u_bracket();
-        translate([44.5 - 7.5,   body_size[1]/2 - m1_screw_spacing/2 + 7.5, - standoffs - 2 + 1.93]) rotate([180,0,0]) u_bracket();
+        translate([44.5 - 7.5,   body_size[1]/2 + m1_screw_spacing/2 - 7.5, - spacer_size[1] - 2]) u_bracket();
+        translate([44.5 - 7.5,   body_size[1]/2 - m1_screw_spacing/2 + 7.5, - spacer_size[1] - 2 + 1.93]) rotate([180,0,0]) u_bracket();
+
+    //Screws
+        color([0.1,0.1,0.1]) {
+            translate([  44.5,              4.5, -8]) rotate([180,0,0]) screw([3,7,0]);
+            translate([ 183.5,              4.5, -8]) rotate([180,0,0]) screw([3,7,0]);
+            translate([  44.5, body_size[1]-4.5, -8]) rotate([180,0,0]) screw([3,7,0]);
+            translate([ 183.5, body_size[1]-4.5, -8]) rotate([180,0,0]) screw([3,7,0]);
+        }
     }
 }
-
 
 // Vu8M LCD U-BRACKET
 module u_bracket() {
@@ -1444,14 +1568,45 @@ module u_bracket() {
     }
 }
 
+// ODROID M1 2.5" SATA HDD mounting kit
+module m1_hdmount() {
+    $fn   = 30;
+    dims  = [89.6,   38.5,  2.0];
+    holes = 4;
+    slots = [4.15,    3.3];
+    standoff_style = [5, 16, 0, 3, 25, 0, 0, 1, 0, 0, 0];
 
-// M3 soldered spaceer
-module spacer() {
-    color([0.6,0.6,0.6])
-    difference(){
-        cylinder(d=5.5, h=6);
-        translate([0,0,-1]) cylinder(d=2.5, h=7);	// M3 hole
+    color([0.2,0.2,0.2])
+    difference() {
+        slab(dims, 4.0);
+        translate([     3.1,   28.3, -1]) cylinder(d = holes, h = 4);
+        translate([    86.5,   28.3, -1]) cylinder(d = holes, h = 4);
+        hull() {
+            translate([   14.75,     10.15, -1]) cylinder(d=3.30, h=4);
+            translate([   15.60,     10.15, -1]) cylinder(d=3.30, h=4);
+        }
+        hull() {
+            translate([   75.60,     10.15, -1]) cylinder(d=3.30, h=4);
+            translate([   76.45,     10.15, -1]) cylinder(d=3.30, h=4);
+        }
     }
+
+    color([0.6,0.6,0.6]) {
+        translate ([   3.1,  28.3 ,  0]) rotate([  0,0,0]) standoff(standoff_style);
+        translate ([  86.5,  28.3 ,  0]) rotate([  0,0,0]) standoff(standoff_style);
+    }
+    color([0.1,0.1,0.1]) {
+        translate ([   3.1,  28.3 ,  2]) rotate([  0,0,0]) screw([3, 7, 0]);
+        translate ([  86.5,  28.3 ,  2]) rotate([  0,0,0]) screw([3, 7, 0]);
+
+        translate ([  15.1,  10.15,  0]) rotate([180,0,0]) screw([3, 7, 0]);
+        translate ([    76,  10.15,  0]) rotate([180,0,0]) screw([3, 7, 0]);
+    }
+
+    // "HDD HOLDER"
+    color([0.9, 0.9, 0.9])
+    translate([67,8,0]) rotate([180,0,180])
+    linear_extrude(height=0.01) text("HDD HOLDER",5);
 }
 
 

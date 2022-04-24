@@ -47,8 +47,8 @@
                            and type "hc4_oem" under class "heatsink"
     20220202 Version 1.0.5 added type "header_6x1","header_3x2"  under "jumper" class, led_3x1.5 under misc class, 
                            momentary_3x2 under button class, fixed ir, corrected sata height, fixed header_7x1
-    2022xxxx Version 1.0.x adjusted slide_4x9, adjust m.2_header, rj45-usb2_double, rj45-usb3_double, out-in-spdif,
-                           momentary_6x6x4, fixed color for usb2 micro otg, adjust all header heights (NIGHTLY NOT RELEASED)
+    20220406 Version 1.0.6 adjusted slide_4x9, adjust m.2_header, rj45-usb2_double, rj45-usb3_double, out-in-spdif,
+                           momentary_6x6x4, fixed color for usb2 micro otg, adjust all header heights
 */
 
 module place(x,y,size_x,size_y,rotation,side,type,pcbsize_z) {
@@ -338,6 +338,25 @@ module plug(x,y,rotation,side,type,pcbsize_z) {
         }
     }
     
+    // audio micro connector type
+    if(type=="audio_micro") {
+        size_x = 7.5;
+        size_y = 3.75;        
+        place(x,y,size_x,size_y,rotation,side,type,pcbsize_z)
+        translate([0,0,3.75]) rotate([-90,0,0])
+        union() {  
+            difference () {
+                color("white") translate([0,0,0]) cube([size_x,size_y,4.75]);
+                color("darkgray") translate([1.5,.5,1]) cube([4.5,2.75,6]);
+                color("white") translate([-.5,.75,-.5]) cube([1,2.5,6]);
+                color("white") translate([7,.75,-.5]) cube([1,2.5,6]);
+                color("darkgray") translate([2.25,-.5,1]) cube([3,2,6]);
+            }
+            color("silver") translate ([2.75,2,.5]) cube([.6,.6,4]);
+            color("silver") translate ([4.5,2,.5]) cube([.6,.6,4]);
+        }
+    }
+    
     // uart micro connector type
     if(type=="uart_micro") {
         size_x = 12.5;
@@ -357,7 +376,7 @@ module plug(x,y,rotation,side,type,pcbsize_z) {
                 color("white") translate([12.5,0,-.5]) cube([2,6,7]);
                 color("white") translate([-1,0,-.5]) cube([1,6,7]);
                 color("white") translate([-1,5,-.5]) cube([14,2,7]);
-                color("white") translate([-0.7,4.5,-.5]) rotate([0,0,-45]) cube([1,2,7]);
+                color("white") translate([-0.7,4.5,-.1]) rotate([0,0,-45]) cube([1,2,7]);
                 color("darkgray") translate([-1,1.5,2]) cube([14,1,7]);
             }
             for (i=[2.5:2.5:10]) {
@@ -615,6 +634,30 @@ module video(x,y,rotation,side,type,pcbsize_z) {
             color("silver") translate([2,0,18.9]) cube([14,.5,.5]);
         }
     }
+
+    // mipi csi port
+    if(type=="mipi_csi") {
+        size_x = 21;
+        size_y = 3;        
+        place(x,y,size_x,size_y,rotation,side,type,pcbsize_z)
+        union() {
+            difference() {
+                color("white") translate([0,0,0]) cube([size_x, size_y, 5]);
+            }
+        }
+    }
+
+    // mipi dsi port
+    if(type=="mipi_dsi") {
+        size_x = 10;
+        size_y = 3;        
+        place(x,y,size_x,size_y,rotation,side,type,pcbsize_z)
+        union() {
+            difference() {
+                color("black") translate([0,0,0]) cube([size_x, size_y, 2]);
+            }
+        }
+    }
 }
 
 // fan connector class
@@ -760,6 +803,13 @@ module ic(x,y,rotation,side,type,pcbsize_z) {
         place(x,y,size_x,size_y,rotation,side,type,pcbsize_z)
         color("dimgray") translate([0,0,0]) cube([size_x,size_y,.8]);
     }    
+    // ic 4mm x 4mm
+    if (type=="ic_4x4") {
+        size_x = 4;
+        size_y = 4;        
+        place(x,y,size_x,size_y,rotation,side,type,pcbsize_z)
+        color("dimgray") translate([0,0,0]) cube([size_x,size_y,.8]);
+    }    
     // ic 4.7mm x 4.7mm
     if (type=="ic_4.7x4.7") {
         size_x = 4.7;
@@ -855,6 +905,13 @@ module ic(x,y,rotation,side,type,pcbsize_z) {
     if (type=="ic_13x9") {
         size_x = 13;
         size_y = 9;        
+        place(x,y,size_x,size_y,rotation,side,type,pcbsize_z)
+        color("dimgray") translate([0,0,0]) cube([size_x,size_y,.8]);
+    }    
+    // ic 16mm x 10mm
+    if (type=="ic_16x10") {
+        size_x = 16;
+        size_y = 10;        
         place(x,y,size_x,size_y,rotation,side,type,pcbsize_z)
         color("dimgray") translate([0,0,0]) cube([size_x,size_y,.8]);
     }    
@@ -1240,10 +1297,10 @@ module misc(x,y,rotation,side,type,pcbsize_z) {
                 color("LightYellow") translate([-3.259,5,5]) cube([28.6,5.5,3]);
                 color("LightYellow") translate([-3.25,5.5,5]) cube([28.5,5.5,3]);
                     
-                color("LightYellow") translate([-3.251,5,-1]) cube([1,6,8]);
+                color("LightYellow") translate([-4.251,5,-1]) cube([2,6,8]);
                 color("LightYellow") translate([.5,5,2]) cube([1,6,8]);
 
-                color("LightYellow") translate([24.25,5,-1]) cube([1,6,8]);
+                color("LightYellow") translate([24.25,5,-1]) cube([2,6,8]);
                 color("LightYellow") translate([20,5,2]) cube([1,6,8]);
                     
                 color("LightYellow") translate([22,15,-1]) rotate([0,0,45]) cube([2,2,8]);
@@ -1408,6 +1465,12 @@ module heatsink(x,y,rotation,side,type,pcbsize_z,soc1size_z) {
         size_y = 90;                
         place(x,y,size_x,size_y,rotation,side,type,(pcbsize_z-pcbsize_z-3))
         color("gray") import("Odroid-N2+_Heatsink.stl", convexity=3);
+    }
+    if(type=="m1_oem") {
+        size_x = 90;
+        size_y = 90;                
+        place(x,y,size_x,size_y,rotation,side,type,(pcbsize_z-pcbsize_z-3))
+        color("gray") translate([-.5,0,0]) rotate([0,0,0]) import("Odroid-M1_Heatsink.stl", convexity=3);
     }
     if(type=="h2_oem") {
         size_x = 90;

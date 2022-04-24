@@ -16,6 +16,7 @@
     Code released under GPLv3: http://www.gnu.org/licenses/gpl.html
 
     20220407 Version 1.0.0    vuScape7c Vu7c SBC Case initial release
+    20220423 Version 1.0.1    update sbc_case_builder_library and adjust top standoff size
     
 */
 
@@ -79,7 +80,7 @@ bottom_standoff=[   8,     // diameter
                     0,     // enable insert at top of standoff
                   4.5,     // insert hole dia. mm
                   5.1];    // insert depth mm
-top_standoff=[      7.5,   // radius
+top_standoff=[      6.5,   // radius
                   top_height-topthick,     // height
                   2.7,     // holesize
                    10,     // supportsize
